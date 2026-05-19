@@ -71,6 +71,7 @@ class PackageLimitEnforcementTest extends TestCase
         $this->actingAs($this->user);
 
         $response = $this->post(route('invitations.store'), [
+            'title' => 'Wedding of Sarah & John',
             'bride_name' => 'Sarah',
             'groom_name' => 'John',
             'event_date' => now()->addMonth()->format('Y-m-d'),

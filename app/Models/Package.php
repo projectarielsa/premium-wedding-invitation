@@ -238,7 +238,7 @@ class Package extends Model
             return 'Gratis';
         }
 
-        return 'Rp ' . number_format($this->price, 0, ',', '.');
+        return 'Rp ' . number_format((float) $this->price, 0, ',', '.');
     }
 
     /**
@@ -250,7 +250,7 @@ class Package extends Model
             return null;
         }
 
-        return 'Rp ' . number_format($this->original_price, 0, ',', '.');
+        return 'Rp ' . number_format((float) $this->original_price, 0, ',', '.');
     }
 
     /**

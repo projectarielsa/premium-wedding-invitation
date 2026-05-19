@@ -194,6 +194,12 @@ class User extends Authenticatable
     public function getEffectivePackage(): ?Package
     {
         if ($this->hasActivePackage()) {
+            // Ensure relationship is fresh if the foreign key was changed
+            if ($this->relationLoaded('activePackage') && 
+                $this->activePackage && 
+                $this->activePackage->id !== $this->active_package_id) {
+                $this->unsetRelation('activePackage');
+            }
             return $this->activePackage;
         }
 
