@@ -26,6 +26,7 @@ class RegistrationTest extends TestCase
         ]);
 
         $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        // After registration, user is redirected to OTP verification page
+        $response->assertRedirect(route('verification.otp.show', absolute: false));
     }
 }
