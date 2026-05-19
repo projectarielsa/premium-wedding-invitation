@@ -318,7 +318,7 @@
                     
                     @if($recentRsvps->count() > 5)
                         <div class="mt-4 pt-4 border-t border-ivory-200">
-                            <a href="{{ route('analytics.index') }}" class="text-sm font-medium text-gold-600 hover:text-gold-700 transition-colors">
+                            <a href="{{ $recentInvitations->first() ? route('invitations.analytics.index', $recentInvitations->first()) : route('invitations.index') }}" class="text-sm font-medium text-gold-600 hover:text-gold-700 transition-colors">
                                 View all RSVPs &rarr;
                             </a>
                         </div>
@@ -340,7 +340,7 @@
             <x-premium.card>
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="section-title">This Week</h3>
-                    <a href="{{ route('analytics.index') }}" class="text-xs font-medium text-gold-600 hover:text-gold-700 transition-colors">
+                    <a href="{{ $recentInvitations->first() ? route('invitations.analytics.index', $recentInvitations->first()) : route('invitations.index') }}" class="text-xs font-medium text-gold-600 hover:text-gold-700 transition-colors">
                         Details
                     </a>
                 </div>
