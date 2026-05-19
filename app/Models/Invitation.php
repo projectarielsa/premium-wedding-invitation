@@ -316,7 +316,7 @@ class Invitation extends Model
      */
     public function getRsvpEnabledAttribute(): bool
     {
-        return filter_var($this->settings['rsvp_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        return $this->settingBool('rsvp_enabled', true);
     }
 
     /**
@@ -324,7 +324,7 @@ class Invitation extends Model
      */
     public function getGiftEnabledAttribute(): bool
     {
-        return filter_var($this->settings['gift_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        return $this->settingBool('gift_enabled', true);
     }
 
     /**
@@ -332,7 +332,7 @@ class Invitation extends Model
      */
     public function getGuestBookEnabledAttribute(): bool
     {
-        return filter_var($this->settings['guest_book_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        return $this->settingBool('guest_book_enabled', true);
     }
 
     /**
@@ -340,7 +340,7 @@ class Invitation extends Model
      */
     public function getCountdownEnabledAttribute(): bool
     {
-        return filter_var($this->settings['countdown_enabled'] ?? true, FILTER_VALIDATE_BOOLEAN);
+        return $this->settingBool('countdown_enabled', true);
     }
 
     /**
@@ -348,7 +348,16 @@ class Invitation extends Model
      */
     public function getMusicAutoplayAttribute(): bool
     {
-        return filter_var($this->settings['music_autoplay'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        return $this->settingBool('music_autoplay', false);
+    }
+
+    /**
+     * Safely cast a settings value to boolean using filter_var.
+     * Handles: true, false, 1, 0, "1", "0", "true", "false", null
+     */
+    private function settingBool(string $key, bool $default = false): bool
+    {
+        return filter_var(data_get($this->settings, $key, $default), FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
