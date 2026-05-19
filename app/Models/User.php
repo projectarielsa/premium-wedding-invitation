@@ -21,6 +21,14 @@ class User extends Authenticatable
     }
 
     public function emailOtps(): HasMany { return $this->hasMany(EmailOtp::class); }
+
+    /**
+     * Get the invitations owned by this user.
+     */
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(Invitation::class);
+    }
     public function hasVerifiedEmail(): bool { return $this->email_verified_at !== null; }
     public function markEmailAsVerified(): bool { return $this->forceFill(['email_verified_at' => $this->freshTimestamp()])->save(); }
     public function isSocialUser(): bool { return $this->provider !== null; }
