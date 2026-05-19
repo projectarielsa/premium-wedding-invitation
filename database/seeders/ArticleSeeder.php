@@ -50,7 +50,10 @@ class ArticleSeeder extends Seeder
         ];
 
         foreach ($articles as $articleData) {
-            Article::create($articleData);
+            Article::updateOrCreate(
+                ['slug' => $articleData['slug']],
+                $articleData
+            );
         }
 
         $this->command->info('Articles seeded successfully!');
