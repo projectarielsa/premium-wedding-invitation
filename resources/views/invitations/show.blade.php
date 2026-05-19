@@ -158,7 +158,7 @@
             <x-premium.card>
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="section-title">Events</h3>
-                    <x-premium.button href="{{ route('events.create', ['invitation' => $invitation->id]) }}" variant="outline" size="sm" icon="plus">
+                    <x-premium.button href="{{ route('invitations.edit', $invitation) }}#events" variant="outline" size="sm" icon="plus">
                         Add Event
                     </x-premium.button>
                 </div>
@@ -188,11 +188,11 @@
                                     @endif
                                 </div>
                                 <x-premium.dropdown-action>
-                                    <x-premium.dropdown-item :href="route('events.edit', $event)" icon="edit">
+                                    <x-premium.dropdown-item :href="route('invitations.edit', $invitation) . '#events'" icon="edit">
                                         Edit
                                     </x-premium.dropdown-item>
                                     <x-premium.dropdown-item 
-                                        :href="route('events.destroy', $event)" 
+                                        :href="route('invitations.events.destroy', [$invitation, $event])" 
                                         method="DELETE"
                                         icon="trash" 
                                         :danger="true"
@@ -208,7 +208,7 @@
                         icon="calendar"
                         title="No events added"
                         description="Add events like ceremony, reception, etc."
-                        :action="route('events.create', ['invitation' => $invitation->id])"
+                        :action="route('invitations.edit', $invitation) . '#events'"
                         actionLabel="Add Event"
                     />
                 @endif
@@ -218,7 +218,7 @@
             <x-premium.card>
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="section-title">Gift Accounts</h3>
-                    <x-premium.button href="{{ route('gift-accounts.create', ['invitation' => $invitation->id]) }}" variant="outline" size="sm" icon="plus">
+                    <x-premium.button href="{{ route('invitations.edit', $invitation) }}#gift-accounts" variant="outline" size="sm" icon="plus">
                         Add Account
                     </x-premium.button>
                 </div>
@@ -353,7 +353,7 @@
                 @else
                     <div class="text-center py-4">
                         <p class="text-sm text-charcoal-500">No guests added yet</p>
-                        <x-premium.button href="{{ route('guests.create', ['invitation' => $invitation->id]) }}" variant="outline" size="sm" class="mt-3">
+                        <x-premium.button href="{{ route('invitations.guests.index', $invitation) }}" variant="outline" size="sm" class="mt-3">
                             Add Guests
                         </x-premium.button>
                     </div>
@@ -372,14 +372,14 @@
                         <span class="text-sm text-charcoal-700">Manage Guests</span>
                     </a>
                     
-                    <a href="{{ route('events.index', ['invitation' => $invitation->id]) }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-ivory-100 transition-colors">
+                    <a href="{{ route('invitations.edit', $invitation) }}#events" class="flex items-center gap-3 p-3 rounded-xl hover:bg-ivory-100 transition-colors">
                         <svg class="w-5 h-5 text-charcoal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                         </svg>
                         <span class="text-sm text-charcoal-700">Manage Events</span>
                     </a>
                     
-                    <a href="{{ route('gift-accounts.index', ['invitation' => $invitation->id]) }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-ivory-100 transition-colors">
+                    <a href="{{ route('invitations.edit', $invitation) }}#gift-accounts" class="flex items-center gap-3 p-3 rounded-xl hover:bg-ivory-100 transition-colors">
                         <svg class="w-5 h-5 text-charcoal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                         </svg>

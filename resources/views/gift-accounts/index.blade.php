@@ -159,7 +159,7 @@
 
                         {{-- Actions --}}
                         <div class="flex items-center gap-2">
-                            <form method="POST" action="{{ route('gift-accounts.toggle', [$invitation ?? $account->invitation, $account]) }}">
+                            <form method="POST" action="{{ route('invitations.gift-accounts.toggle-active', [$invitation ?? $account->invitation, $account]) }}">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="btn btn-sm btn-ghost">
@@ -177,7 +177,7 @@
                                 </x-premium.dropdown-item>
                                 <hr class="my-2 border-ivory-200">
                                 <x-premium.dropdown-item 
-                                    :href="route('gift-accounts.destroy', [$invitation ?? $account->invitation, $account])" 
+                                    :href="route('invitations.gift-accounts.destroy', [$invitation ?? $account->invitation, $account])" 
                                     method="DELETE"
                                     icon="trash" 
                                     :danger="true"
@@ -212,7 +212,7 @@
 
     {{-- Add Gift Account Modal --}}
     <x-premium.modal name="add-gift-account" title="Add Gift Account" maxWidth="lg">
-        <form method="POST" action="{{ route('gift-accounts.store', $invitation ?? request()->route('invitation')) }}" enctype="multipart/form-data" class="space-y-4">
+        <form method="POST" action="{{ route('invitations.gift-accounts.store', $invitation ?? request()->route('invitation')) }}" enctype="multipart/form-data" class="space-y-4">
             @csrf
             
             <x-premium.form-select 
@@ -288,7 +288,7 @@
     {{-- Edit Modals --}}
     @foreach($giftAccounts as $account)
         <x-premium.modal name="edit-account-{{ $account->id }}" title="Edit Gift Account" maxWidth="lg">
-            <form method="POST" action="{{ route('gift-accounts.update', [$invitation ?? $account->invitation, $account]) }}" enctype="multipart/form-data" class="space-y-4">
+            <form method="POST" action="{{ route('invitations.gift-accounts.update', [$invitation ?? $account->invitation, $account]) }}" enctype="multipart/form-data" class="space-y-4">
                 @csrf
                 @method('PUT')
                 
