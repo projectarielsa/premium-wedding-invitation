@@ -75,16 +75,19 @@ class RsvpController extends Controller
      */
     public function submit(SubmitRsvpRequest $request, Invitation $invitation): RedirectResponse|JsonResponse
     {
+        // Always expect JSON for API calls
+        $isJson = $request->expectsJson() || $request->isJson() || $request->ajax();
+
         // Verify invitation is published and RSVP enabled
         if (!$invitation->isPublic()) {
-            if ($request->expectsJson()) {
+            if ($isJson) {
                 return response()->json(['error' => 'Invitation is not available.'], 404);
             }
             abort(404, 'Invitation is not available.');
         }
 
         if (!$invitation->rsvp_enabled) {
-            if ($request->expectsJson()) {
+            if ($isJson) {
                 return response()->json(['error' => 'RSVP is not available for this invitation.'], 404);
             }
             abort(404, 'RSVP is not available for this invitation.');
@@ -111,11 +114,16 @@ class RsvpController extends Controller
 
         if (!$guest) {
             $message = 'Guest information is required to submit RSVP.';
-            if ($request->expectsJson()) {
+            if ($isJson) {
                 return response()->json(['error' => $message], 422);
             }
             return back()->with('error', $message)->withInput();
         }
+
+        // Check for duplicate submission (spam prevention)
+        $existingRsvp = Rsvp::where('guest_id', $guest->id)
+            ->where('invitation_id', $invitation->id)
+            ->first();
 
         try {
             DB::transaction(function () use ($request, $invitation, $guest) {
@@ -149,7 +157,7 @@ class RsvpController extends Controller
 
             $message = 'Thank you! Your RSVP has been submitted successfully.';
 
-            if ($request->expectsJson()) {
+            if ($isJson) {
                 return response()->json([
                     'success' => true,
                     'message' => $message,
@@ -160,7 +168,7 @@ class RsvpController extends Controller
         } catch (\Exception $e) {
             $message = 'Failed to submit RSVP. Please try again.';
 
-            if ($request->expectsJson()) {
+            if ($isJson) {
                 return response()->json(['error' => $message], 500);
             }
 

@@ -49,6 +49,10 @@ class SubmitRsvpRequest extends FormRequest
             'message' => ['nullable', 'string', 'max:1000'],
             'dietary_requirements' => ['nullable', 'string', 'max:500'],
             'special_requests' => ['nullable', 'string', 'max:500'],
+            'guest_token' => ['nullable', 'string', 'max:255'],
+            'guest_name' => ['required_without:guest_token', 'nullable', 'string', 'max:255'],
+            'phone_number' => ['nullable', 'string', 'max:50'],
+            'email' => ['nullable', 'email', 'max:255'],
         ];
     }
 

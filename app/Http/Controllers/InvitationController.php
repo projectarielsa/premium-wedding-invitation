@@ -309,10 +309,13 @@ class InvitationController extends Controller
         try {
             $invitation = $this->invitationService->getPublicBySlug($slug);
 
+            // Load relationships needed for display
+            $invitation->load(['events', 'giftAccounts', 'template']);
+
             // Increment view count (tracking handled by middleware)
             $invitation->incrementViewCount();
 
-            return view('invitations.public', [
+            return view('public.invitations.show', [
                 'invitation' => $invitation,
                 'isPreview' => false,
                 'guest' => null,
@@ -330,6 +333,9 @@ class InvitationController extends Controller
         try {
             $invitation = $this->invitationService->getPublicBySlug($slug);
 
+            // Load relationships needed for display
+            $invitation->load(['events', 'giftAccounts', 'template']);
+
             $guest = $invitation->guests()
                 ->where('slug_token', $guestToken)
                 ->first();
@@ -340,7 +346,7 @@ class InvitationController extends Controller
 
             $invitation->incrementViewCount();
 
-            return view('invitations.public', [
+            return view('public.invitations.show', [
                 'invitation' => $invitation,
                 'isPreview' => false,
                 'guest' => $guest,
