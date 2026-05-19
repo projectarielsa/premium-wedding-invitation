@@ -203,7 +203,6 @@
                                 @if($invitation->status->value === 'draft')
                                     <form method="POST" action="{{ route('invitations.publish', $invitation) }}">
                                         @csrf
-                                        @method('PATCH')
                                         <button type="submit" class="btn btn-sm btn-primary">
                                             Publish
                                         </button>
@@ -211,7 +210,6 @@
                                 @elseif($invitation->status->value === 'published')
                                     <form method="POST" action="{{ route('invitations.unpublish', $invitation) }}">
                                         @csrf
-                                        @method('PATCH')
                                         <button type="submit" class="btn btn-sm btn-ghost">
                                             Unpublish
                                         </button>

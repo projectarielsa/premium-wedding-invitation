@@ -51,7 +51,6 @@
                         @if($invitation->status->value === 'draft')
                             <form method="POST" action="{{ route('invitations.publish', $invitation) }}">
                                 @csrf
-                                @method('PATCH')
                                 <x-premium.button type="submit" variant="primary" size="sm">
                                     Publish Now
                                 </x-premium.button>
@@ -59,7 +58,6 @@
                         @elseif($invitation->status->value === 'published')
                             <form method="POST" action="{{ route('invitations.unpublish', $invitation) }}">
                                 @csrf
-                                @method('PATCH')
                                 <x-premium.button type="submit" variant="ghost" size="sm">
                                     Unpublish
                                 </x-premium.button>

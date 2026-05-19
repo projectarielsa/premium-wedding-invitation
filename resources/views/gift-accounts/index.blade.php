@@ -161,7 +161,6 @@
                         <div class="flex items-center gap-2">
                             <form method="POST" action="{{ route('invitations.gift-accounts.toggle-active', [$invitation ?? $account->invitation, $account]) }}">
                                 @csrf
-                                @method('PATCH')
                                 <button type="submit" class="btn btn-sm btn-ghost">
                                     {{ $account->is_active ? 'Deactivate' : 'Activate' }}
                                 </button>
