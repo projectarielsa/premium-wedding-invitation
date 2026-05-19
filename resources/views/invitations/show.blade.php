@@ -300,7 +300,7 @@
             <x-premium.card>
                 <div class="flex items-center justify-between mb-4">
                     <h3 class="section-title">RSVP Summary</h3>
-                    <a href="{{ route('guests.index', ['invitation' => $invitation->id]) }}" class="text-sm text-gold-600 hover:text-gold-700">
+                    <a href="{{ route('invitations.guests.index', ['invitation' => $invitation->id]) }}" class="text-sm text-gold-600 hover:text-gold-700">
                         View All
                     </a>
                 </div>
@@ -365,7 +365,7 @@
                 <h3 class="section-title mb-4">Quick Links</h3>
                 
                 <div class="space-y-2">
-                    <a href="{{ route('guests.index', ['invitation' => $invitation->id]) }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-ivory-100 transition-colors">
+                    <a href="{{ route('invitations.guests.index', ['invitation' => $invitation->id]) }}" class="flex items-center gap-3 p-3 rounded-xl hover:bg-ivory-100 transition-colors">
                         <svg class="w-5 h-5 text-charcoal-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                         </svg>

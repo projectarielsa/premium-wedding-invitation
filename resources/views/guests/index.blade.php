@@ -54,7 +54,7 @@
 
     {{-- Filters & Search --}}
     <x-premium.card class="mb-6">
-        <form method="GET" action="{{ route('guests.index', $invitation) }}" class="flex flex-col lg:flex-row gap-4">
+        <form method="GET" action="{{ route('invitations.guests.index', $invitation) }}" class="flex flex-col lg:flex-row gap-4">
             {{-- Search --}}
             <div class="flex-1">
                 <div class="relative">
@@ -111,7 +111,7 @@
             </x-premium.button>
             
             @if(request()->hasAny(['search', 'category', 'status', 'sort_by']))
-                <a href="{{ route('guests.index', $invitation) }}" class="btn btn-ghost">
+                <a href="{{ route('invitations.guests.index', $invitation) }}" class="btn btn-ghost">
                     Clear
                 </a>
             @endif

@@ -226,7 +226,7 @@
                                 <x-premium.dropdown-item :href="route('invitations.edit', $invitation)" icon="edit">
                                     Edit
                                 </x-premium.dropdown-item>
-                                <x-premium.dropdown-item :href="route('guests.index', ['invitation' => $invitation->id])" icon="users">
+                                <x-premium.dropdown-item :href="route('invitations.guests.index', ['invitation' => $invitation->id])" icon="users">
                                     Manage Guests
                                 </x-premium.dropdown-item>
                                 <form method="POST" action="{{ route('invitations.duplicate', $invitation) }}" class="w-full">

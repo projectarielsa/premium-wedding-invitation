@@ -146,7 +146,7 @@
                                     <x-premium.dropdown-item :href="route('invitations.edit', $invitation)" icon="edit">
                                         Edit
                                     </x-premium.dropdown-item>
-                                    <x-premium.dropdown-item :href="route('guests.index', ['invitation' => $invitation->id])" icon="users">
+                                    <x-premium.dropdown-item :href="route('invitations.guests.index', ['invitation' => $invitation->id])" icon="users">
                                         Manage Guests
                                     </x-premium.dropdown-item>
                                 </x-premium.dropdown-action>
@@ -180,7 +180,7 @@
                     </div>
                 </a>
 
-                <a href="{{ route('guests.index') }}" class="card card-body card-hover group">
+                <a href="{{ route('invitations.index') }}" class="card card-body card-hover group">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-500 group-hover:text-white transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -188,13 +188,13 @@
                             </svg>
                         </div>
                         <div>
-                            <h4 class="font-semibold text-charcoal-800">Add Guests</h4>
-                            <p class="text-sm text-charcoal-500">Import or add guests manually</p>
+                            <h4 class="font-semibold text-charcoal-800">Manage Invitations</h4>
+                            <p class="text-sm text-charcoal-500">View and manage your invitations</p>
                         </div>
                     </div>
                 </a>
 
-                <a href="{{ route('analytics.index') }}" class="card card-body card-hover group">
+                <a href="{{ route('invitations.index') }}" class="card card-body card-hover group">
                     <div class="flex items-center gap-4">
                         <div class="w-12 h-12 rounded-xl bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-500 group-hover:text-white transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -203,7 +203,7 @@
                         </div>
                         <div>
                             <h4 class="font-semibold text-charcoal-800">View Analytics</h4>
-                            <p class="text-sm text-charcoal-500">Track invitation performance</p>
+                            <p class="text-sm text-charcoal-500">Select an invitation to view analytics</p>
                         </div>
                     </div>
                 </a>

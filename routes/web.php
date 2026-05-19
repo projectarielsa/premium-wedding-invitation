@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\CheckInController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GiftAccountController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\InvitationController;
@@ -62,6 +64,10 @@ Route::post('/invite/{slug}/gift/{giftAccount}/copy', [GiftAccountController::cl
     ->name('gift.track.copy');
 Route::post('/invite/{slug}/gift/{giftAccount}/view', [GiftAccountController::class, 'trackView'])
     ->name('gift.track.view');
+
+// Public check-in via QR code (can be accessed without auth for quick scanning)
+Route::get('/checkin/{token}', [CheckInController::class, 'process'])
+    ->name('checkin.process');
 
 
 
@@ -169,6 +175,35 @@ Route::middleware(['auth', 'otp.verified'])->group(function () {
                 Route::get('/rsvp-stats', [AnalyticsController::class, 'rsvpStats'])->name('rsvp-stats');
                 Route::get('/visitor-stats', [AnalyticsController::class, 'visitorStats'])->name('visitor-stats');
                 Route::get('/chart-data', [AnalyticsController::class, 'chartData'])->name('chart-data');
+            });
+            
+            // =========================================================================
+            // CHECK-IN (nested under invitation)
+            // =========================================================================
+            
+            Route::prefix('checkin')->name('checkin.')->group(function () {
+                Route::get('/', [CheckInController::class, 'index'])->name('index');
+                Route::get('/stats', [CheckInController::class, 'stats'])->name('stats');
+                Route::post('/{guest}/check-in', [CheckInController::class, 'checkIn'])->name('check-in');
+                Route::post('/{guest}/undo', [CheckInController::class, 'undoCheckIn'])->name('undo');
+                Route::post('/bulk', [CheckInController::class, 'bulkCheckIn'])->name('bulk');
+                
+                // QR Code generation
+                Route::get('/{guest}/qr', [CheckInController::class, 'getQrDataUri'])->name('qr');
+                Route::get('/{guest}/qr/download', [CheckInController::class, 'downloadQr'])->name('qr.download');
+                Route::post('/{guest}/qr/generate', [CheckInController::class, 'generateQr'])->name('qr.generate');
+                Route::post('/qr/bulk-generate', [CheckInController::class, 'bulkGenerateQr'])->name('qr.bulk-generate');
+            });
+            
+            // =========================================================================
+            // EXPORTS (nested under invitation)
+            // =========================================================================
+            
+            Route::prefix('export')->name('export.')->group(function () {
+                Route::get('/guests', [ExportController::class, 'guests'])->name('guests');
+                Route::get('/rsvps', [ExportController::class, 'rsvps'])->name('rsvps');
+                Route::get('/analytics', [ExportController::class, 'analytics'])->name('analytics');
+                Route::get('/summary', [ExportController::class, 'summary'])->name('summary');
             });
         });
         
