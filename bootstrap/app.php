@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureOtpVerified;
+use App\Http\Middleware\EnsureUserIsAdmin;
+use App\Http\Middleware\EnsureUserNotSuspended;
 use App\Http\Middleware\TrackInvitationView;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -16,6 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'otp.verified' => EnsureOtpVerified::class,
             'track.invitation' => TrackInvitationView::class,
+            'admin' => EnsureUserIsAdmin::class,
+            'not.suspended' => EnsureUserNotSuspended::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

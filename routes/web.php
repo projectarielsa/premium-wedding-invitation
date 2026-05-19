@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminDashboardController;
+use App\Http\Controllers\Admin\AdminOrderController;
+use App\Http\Controllers\Admin\AdminPackageController;
+use App\Http\Controllers\Admin\AdminPaymentSettingsController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\CheckInController;
 use App\Http\Controllers\DashboardController;
@@ -8,6 +13,8 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GiftAccountController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RsvpController;
 use Illuminate\Support\Facades\Route;
@@ -30,6 +37,12 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
+
+// Pricing Page (Public)
+Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
+Route::get('/pricing/{package}', [PricingController::class, 'show'])->name('pricing.show');
+Route::get('/pricing/compare', [PricingController::class, 'compare'])->name('pricing.compare');
+Route::get('/api/packages', [PricingController::class, 'packagesJson'])->name('api.packages');
 
 // Public invitation viewing
 Route::prefix('invite')->name('invitation.public')->group(function () {
@@ -219,3 +232,71 @@ Route::middleware(['auth', 'otp.verified'])->group(function () {
 // =========================================================================
 
 require __DIR__.'/auth.php';
+
+// =========================================================================
+// ORDERS & BILLING (Authenticated)
+// =========================================================================
+
+Route::middleware(['auth', 'otp.verified', 'not.suspended'])->group(function () {
+    // Orders
+    Route::prefix('orders')->name('orders.')->group(function () {
+        Route::get('/', [OrderController::class, 'index'])->name('index');
+        Route::get('/checkout/{package}', [OrderController::class, 'checkout'])->name('checkout');
+        Route::post('/', [OrderController::class, 'store'])->name('store');
+        Route::get('/{order}', [OrderController::class, 'show'])->name('show');
+        Route::get('/{order}/payment', [OrderController::class, 'payment'])->name('payment');
+        Route::post('/{order}/payment', [OrderController::class, 'uploadPaymentProof'])->name('upload-payment');
+        Route::post('/{order}/cancel', [OrderController::class, 'cancel'])->name('cancel');
+        Route::get('/{order}/invoice', [OrderController::class, 'invoice'])->name('invoice');
+    });
+});
+
+// =========================================================================
+// ADMIN ROUTES
+// =========================================================================
+
+Route::middleware(['auth', 'otp.verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
+    // Admin Dashboard
+    Route::get('/', [AdminDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/stats', [AdminDashboardController::class, 'stats'])->name('stats');
+    
+    // Package Management
+    Route::resource('packages', AdminPackageController::class);
+    Route::post('/packages/{package}/toggle-active', [AdminPackageController::class, 'toggleActive'])
+        ->name('packages.toggle-active');
+    
+    // Order Management
+    Route::get('/orders', [AdminOrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/pending', [AdminOrderController::class, 'pending'])->name('orders.pending');
+    Route::get('/orders/export', [AdminOrderController::class, 'export'])->name('orders.export');
+    Route::get('/orders/{order}', [AdminOrderController::class, 'show'])->name('orders.show');
+    Route::post('/orders/{order}/approve', [AdminOrderController::class, 'approve'])->name('orders.approve');
+    Route::post('/orders/{order}/reject', [AdminOrderController::class, 'reject'])->name('orders.reject');
+    Route::post('/orders/{order}/complete', [AdminOrderController::class, 'complete'])->name('orders.complete');
+    Route::patch('/orders/{order}/notes', [AdminOrderController::class, 'updateNotes'])->name('orders.update-notes');
+    Route::get('/orders/{order}/payment-proof', [AdminOrderController::class, 'viewPaymentProof'])
+        ->name('orders.payment-proof');
+    
+    // User Management
+    Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('/users/export', [AdminUserController::class, 'export'])->name('users.export');
+    Route::get('/users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+    Route::get('/users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::post('/users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('users.suspend');
+    Route::post('/users/{user}/unsuspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
+    Route::post('/users/{user}/assign-package', [AdminUserController::class, 'assignPackage'])
+        ->name('users.assign-package');
+    Route::post('/users/{user}/remove-package', [AdminUserController::class, 'removePackage'])
+        ->name('users.remove-package');
+    Route::post('/users/{user}/extend-package', [AdminUserController::class, 'extendPackage'])
+        ->name('users.extend-package');
+    
+    // Payment Settings
+    Route::resource('payment-settings', AdminPaymentSettingsController::class)
+        ->except(['show']);
+    Route::post('/payment-settings/{paymentSetting}/toggle-active', [AdminPaymentSettingsController::class, 'toggleActive'])
+        ->name('payment-settings.toggle-active');
+    Route::post('/payment-settings/reorder', [AdminPaymentSettingsController::class, 'reorder'])
+        ->name('payment-settings.reorder');
+});
