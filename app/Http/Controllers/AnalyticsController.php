@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Enums\AttendanceStatus;
 use App\Models\Invitation;
 use App\Models\InvitationAnalytic;
+use App\Services\PackageLimitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -21,12 +22,33 @@ use Illuminate\View\View;
  */
 class AnalyticsController extends Controller
 {
+    public function __construct(
+        private readonly PackageLimitService $packageLimitService
+    ) {}
+
     /**
      * Display analytics overview for an invitation.
      */
     public function index(Request $request, Invitation $invitation): View
     {
         $this->authorize('viewAnalytics', $invitation);
+
+        $user = $request->user();
+        
+        // Admin bypass - skip feature check for admins
+        if (!$user->isAdmin()) {
+            // Check if analytics feature is enabled for user's package
+            $featureCheck = $this->packageLimitService->canAccessAnalytics($user);
+            
+            if (!$featureCheck->isAllowed()) {
+                return view('analytics.locked', [
+                    'invitation' => $invitation,
+                    'message' => $featureCheck->message,
+                    'upgradeRequired' => $featureCheck->needsUpgrade(),
+                    'suggestedPackage' => $this->packageLimitService->getUpgradeSuggestion($user, 'analytics'),
+                ]);
+            }
+        }
 
         $period = $request->input('period', '7days');
         $dateRange = $this->getDateRange($period);

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsureOtpVerified;
+use App\Http\Middleware\EnsurePackageFeatureEnabled;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use App\Http\Middleware\EnsureUserNotSuspended;
 use App\Http\Middleware\TrackInvitationView;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'track.invitation' => TrackInvitationView::class,
             'admin' => EnsureUserIsAdmin::class,
             'not.suspended' => EnsureUserNotSuspended::class,
+            'package.feature' => EnsurePackageFeatureEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

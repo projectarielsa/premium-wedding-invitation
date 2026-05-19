@@ -14,10 +14,25 @@ use Illuminate\Auth\Access\Response;
  *
  * Ensures multi-tenant security - users can only access their own invitations.
  * Prevents IDOR vulnerabilities.
+ * 
+ * Admin and super_admin users bypass all policy restrictions.
  */
 class InvitationPolicy
 {
     use HandlesAuthorization;
+
+    /**
+     * Perform pre-authorization checks.
+     * Admin users bypass all policy restrictions.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return null; // Fall through to specific policy methods
+    }
 
     /**
      * Determine whether the user can view any invitations.

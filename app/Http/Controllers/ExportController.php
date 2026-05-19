@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Models\Invitation;
+use App\Services\PackageLimitService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -15,12 +16,28 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ExportController extends Controller
 {
+    public function __construct(
+        private readonly PackageLimitService $packageLimitService
+    ) {}
+
     /**
      * Export guests to CSV.
      */
     public function guests(Request $request, Invitation $invitation): StreamedResponse
     {
         $this->authorize('view', $invitation);
+
+        $user = $request->user();
+        
+        // Admin bypass - skip feature check for admins
+        if (!$user->isAdmin()) {
+            // Check if export feature is enabled for user's package
+            $featureCheck = $this->packageLimitService->canExportData($user);
+            
+            if (!$featureCheck->isAllowed()) {
+                abort(403, $featureCheck->message);
+            }
+        }
 
         $guests = $invitation->guests()->with('rsvp')->get();
         $filename = Str::slug($invitation->couple_name) . '-guests-' . now()->format('Y-m-d') . '.csv';
@@ -78,6 +95,18 @@ class ExportController extends Controller
     {
         $this->authorize('view', $invitation);
 
+        $user = $request->user();
+        
+        // Admin bypass - skip feature check for admins
+        if (!$user->isAdmin()) {
+            // Check if export feature is enabled for user's package
+            $featureCheck = $this->packageLimitService->canExportData($user);
+            
+            if (!$featureCheck->isAllowed()) {
+                abort(403, $featureCheck->message);
+            }
+        }
+
         $rsvps = $invitation->rsvps()->with('guest')->get();
         $filename = Str::slug($invitation->couple_name) . '-rsvps-' . now()->format('Y-m-d') . '.csv';
 
@@ -121,6 +150,18 @@ class ExportController extends Controller
     public function analytics(Request $request, Invitation $invitation): StreamedResponse
     {
         $this->authorize('view', $invitation);
+
+        $user = $request->user();
+        
+        // Admin bypass - skip feature check for admins
+        if (!$user->isAdmin()) {
+            // Check if export feature is enabled for user's package
+            $featureCheck = $this->packageLimitService->canExportData($user);
+            
+            if (!$featureCheck->isAllowed()) {
+                abort(403, $featureCheck->message);
+            }
+        }
 
         $analytics = $invitation->analytics()
             ->orderBy('created_at', 'desc')
@@ -167,6 +208,18 @@ class ExportController extends Controller
     public function summary(Request $request, Invitation $invitation): StreamedResponse
     {
         $this->authorize('view', $invitation);
+
+        $user = $request->user();
+        
+        // Admin bypass - skip feature check for admins
+        if (!$user->isAdmin()) {
+            // Check if export feature is enabled for user's package
+            $featureCheck = $this->packageLimitService->canExportData($user);
+            
+            if (!$featureCheck->isAllowed()) {
+                abort(403, $featureCheck->message);
+            }
+        }
 
         $filename = Str::slug($invitation->couple_name) . '-summary-' . now()->format('Y-m-d') . '.csv';
 

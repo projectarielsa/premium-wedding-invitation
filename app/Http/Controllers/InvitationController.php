@@ -11,6 +11,7 @@ use App\Http\Requests\UpdateInvitationRequest;
 use App\Models\Invitation;
 use App\Models\Template;
 use App\Services\Invitation\InvitationService;
+use App\Services\PackageLimitService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -25,7 +26,8 @@ use Illuminate\View\View;
 class InvitationController extends Controller
 {
     public function __construct(
-        private readonly InvitationService $invitationService
+        private readonly InvitationService $invitationService,
+        private readonly PackageLimitService $packageLimitService
     ) {}
 
     /**
@@ -62,11 +64,36 @@ class InvitationController extends Controller
     /**
      * Show the form for creating a new invitation.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('create', Invitation::class);
 
+        $user = $request->user();
+        
+        // Admin bypass - skip limit check for admins
+        if (!$user->isAdmin()) {
+            // Check invitation limit before showing create form
+            $limitCheck = $this->packageLimitService->canCreateInvitation($user);
+            
+            if (!$limitCheck->isAllowed()) {
+                return view('invitations.limit-reached', [
+                    'message' => $limitCheck->message,
+                    'currentUsage' => $limitCheck->currentUsage,
+                    'maxAllowed' => $limitCheck->maxAllowed,
+                    'upgradeRequired' => $limitCheck->needsUpgrade(),
+                    'suggestedPackage' => $this->packageLimitService->getUpgradeSuggestion($user, 'invitations'),
+                ]);
+            }
+        }
+
         $templates = Template::active()->ordered()->get();
+        
+        // Mark premium templates as locked based on user's package
+        $package = $user->getEffectivePackage();
+        $templates = $templates->map(function ($template) use ($package, $user) {
+            $template->is_locked = !$user->isAdmin() && $template->is_premium && (!$package || !$package->canAccessTemplate($template));
+            return $template;
+        });
 
         return view('invitations.create', compact('templates'));
     }
@@ -76,6 +103,34 @@ class InvitationController extends Controller
      */
     public function store(StoreInvitationRequest $request): RedirectResponse
     {
+        $user = $request->user();
+        
+        // Admin bypass - skip limit check for admins
+        if (!$user->isAdmin()) {
+            // Enforce invitation limit
+            $limitCheck = $this->packageLimitService->canCreateInvitation($user);
+            
+            if (!$limitCheck->isAllowed()) {
+                return redirect()
+                    ->route('pricing')
+                    ->with('upgrade_required', true)
+                    ->with('upgrade_message', $limitCheck->message);
+            }
+            
+            // Check template access if a premium template is selected
+            if ($request->filled('template_id')) {
+                $template = Template::find($request->input('template_id'));
+                if ($template) {
+                    $templateCheck = $this->packageLimitService->canAccessTemplate($user, $template);
+                    if (!$templateCheck->isAllowed()) {
+                        return back()
+                            ->with('error', $templateCheck->message)
+                            ->withInput();
+                    }
+                }
+            }
+        }
+        
         $data = $request->validated();
 
         // Handle cover image upload
@@ -201,6 +256,21 @@ class InvitationController extends Controller
     public function duplicate(Request $request, Invitation $invitation): RedirectResponse
     {
         $this->authorize('duplicate', $invitation);
+
+        $user = $request->user();
+        
+        // Admin bypass - skip limit check for admins
+        if (!$user->isAdmin()) {
+            // Check if user can create another invitation (duplicate counts as new)
+            $limitCheck = $this->packageLimitService->canCreateInvitation($user);
+            
+            if (!$limitCheck->isAllowed()) {
+                return redirect()
+                    ->route('pricing')
+                    ->with('upgrade_required', true)
+                    ->with('upgrade_message', $limitCheck->message);
+            }
+        }
 
         try {
             $clone = $this->invitationService->duplicate($request->user(), $invitation);

@@ -6,6 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Guest;
 use App\Models\Invitation;
+use App\Services\PackageLimitService;
 use App\Services\QrCodeService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -20,7 +21,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class CheckInController extends Controller
 {
     public function __construct(
-        private QrCodeService $qrCodeService
+        private QrCodeService $qrCodeService,
+        private PackageLimitService $packageLimitService
     ) {}
 
     /**
@@ -29,6 +31,23 @@ class CheckInController extends Controller
     public function index(Request $request, Invitation $invitation): View
     {
         $this->authorize('view', $invitation);
+
+        $user = $request->user();
+        
+        // Admin bypass - skip feature check for admins
+        if (!$user->isAdmin()) {
+            // Check if QR check-in feature is enabled for user's package
+            $featureCheck = $this->packageLimitService->canUseQrCheckin($user);
+            
+            if (!$featureCheck->isAllowed()) {
+                return view('checkin.locked', [
+                    'invitation' => $invitation,
+                    'message' => $featureCheck->message,
+                    'upgradeRequired' => $featureCheck->needsUpgrade(),
+                    'suggestedPackage' => $this->packageLimitService->getUpgradeSuggestion($user, 'qr_checkin'),
+                ]);
+            }
+        }
 
         $query = $invitation->guests()->with('rsvp');
 

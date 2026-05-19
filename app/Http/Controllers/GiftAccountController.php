@@ -8,6 +8,7 @@ use App\Http\Requests\StoreGiftAccountRequest;
 use App\Http\Requests\UpdateGiftAccountRequest;
 use App\Models\GiftAccount;
 use App\Models\Invitation;
+use App\Services\PackageLimitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -22,11 +23,40 @@ use Illuminate\Support\Facades\Storage;
  */
 class GiftAccountController extends Controller
 {
+    public function __construct(
+        private readonly PackageLimitService $packageLimitService
+    ) {}
+
     /**
      * Store a newly created gift account.
      */
     public function store(StoreGiftAccountRequest $request, Invitation $invitation): RedirectResponse
     {
+        $user = $request->user();
+        
+        // Admin bypass - skip limit check for admins
+        if (!$user->isAdmin()) {
+            // First check if gift feature is enabled
+            $giftFeatureCheck = $this->packageLimitService->canUseFeature($user, 'gift');
+            
+            if (!$giftFeatureCheck->isAllowed()) {
+                return back()
+                    ->with('error', $giftFeatureCheck->message)
+                    ->with('upgrade_required', true)
+                    ->withInput();
+            }
+            
+            // Then check gift account limit
+            $limitCheck = $this->packageLimitService->canAddGiftAccount($user, $invitation);
+            
+            if (!$limitCheck->isAllowed()) {
+                return back()
+                    ->with('error', $limitCheck->message)
+                    ->with('upgrade_required', $limitCheck->needsUpgrade())
+                    ->withInput();
+            }
+        }
+        
         $data = $request->validated();
 
         // Handle provider logo upload

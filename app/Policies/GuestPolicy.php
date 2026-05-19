@@ -15,10 +15,25 @@ use Illuminate\Auth\Access\Response;
  *
  * Guests are accessed through their invitation, so we verify
  * the user owns the invitation that the guest belongs to.
+ * 
+ * Admin and super_admin users bypass all policy restrictions.
  */
 class GuestPolicy
 {
     use HandlesAuthorization;
+
+    /**
+     * Perform pre-authorization checks.
+     * Admin users bypass all policy restrictions.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return null; // Fall through to specific policy methods
+    }
 
     /**
      * Determine whether the user can view any guests for an invitation.

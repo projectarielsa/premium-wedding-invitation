@@ -13,6 +13,20 @@ class OrderPolicy
     use HandlesAuthorization;
 
     /**
+     * Perform pre-authorization checks.
+     * Admin users bypass all policy restrictions except user-specific actions.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        // For admin-only actions, admins always pass
+        if ($user->isAdmin() && in_array($ability, ['approve', 'reject', 'delete', 'viewAny'])) {
+            return true;
+        }
+
+        return null; // Fall through to specific policy methods
+    }
+
+    /**
      * Determine whether the user can view any orders.
      */
     public function viewAny(User $user): bool

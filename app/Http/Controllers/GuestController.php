@@ -10,6 +10,7 @@ use App\Http\Requests\StoreGuestRequest;
 use App\Http\Requests\UpdateGuestRequest;
 use App\Models\Guest;
 use App\Models\Invitation;
+use App\Services\PackageLimitService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,10 @@ use Illuminate\View\View;
  */
 class GuestController extends Controller
 {
+    public function __construct(
+        private readonly PackageLimitService $packageLimitService
+    ) {}
+
     /**
      * Display a listing of guests for the invitation.
      */
@@ -80,7 +85,20 @@ class GuestController extends Controller
             ->groupBy('category')
             ->pluck('count', 'category');
 
-        return view('guests.index', compact('invitation', 'guests', 'categoryCounts'));
+        // Get guest limit info for UI
+        $user = $request->user();
+        $guestLimitInfo = null;
+        if (!$user->isAdmin()) {
+            $limitCheck = $this->packageLimitService->canAddGuests($user, $invitation, 1);
+            $guestLimitInfo = [
+                'current' => $invitation->guests()->count(),
+                'max' => $limitCheck->maxAllowed,
+                'remaining' => $limitCheck->remaining,
+                'can_add' => $limitCheck->isAllowed(),
+            ];
+        }
+
+        return view('guests.index', compact('invitation', 'guests', 'categoryCounts', 'guestLimitInfo'));
     }
 
 
@@ -90,6 +108,21 @@ class GuestController extends Controller
      */
     public function store(StoreGuestRequest $request, Invitation $invitation): RedirectResponse
     {
+        $user = $request->user();
+        
+        // Admin bypass - skip limit check for admins
+        if (!$user->isAdmin()) {
+            // Enforce guest limit
+            $limitCheck = $this->packageLimitService->canAddGuests($user, $invitation, 1);
+            
+            if (!$limitCheck->isAllowed()) {
+                return back()
+                    ->with('error', $limitCheck->message)
+                    ->with('upgrade_required', $limitCheck->needsUpgrade())
+                    ->withInput();
+            }
+        }
+        
         $data = $request->validated();
 
         $invitation->guests()->create($data);
@@ -140,6 +173,19 @@ class GuestController extends Controller
      */
     public function import(ImportGuestRequest $request, Invitation $invitation): RedirectResponse
     {
+        $user = $request->user();
+        
+        // Check guest limit before import (only for non-admins)
+        if (!$user->isAdmin()) {
+            $limitCheck = $this->packageLimitService->canAddGuests($user, $invitation, 1);
+            
+            if (!$limitCheck->isAllowed()) {
+                return back()
+                    ->with('error', $limitCheck->message)
+                    ->with('upgrade_required', $limitCheck->needsUpgrade());
+            }
+        }
+        
         $file = $request->file('file');
         $skipHeader = $request->boolean('skip_header', true);
         $columnMapping = $request->input('column_mapping', [
@@ -160,7 +206,7 @@ class GuestController extends Controller
             DB::beginTransaction();
 
             if (in_array($extension, ['csv', 'txt'])) {
-                $result = $this->importFromCsv($file, $invitation, $skipHeader, $columnMapping);
+                $result = $this->importFromCsv($file, $invitation, $skipHeader, $columnMapping, $user);
             } else {
                 // For Excel files, we'd need a package like PhpSpreadsheet
                 // For now, return error for unsupported formats
@@ -169,15 +215,20 @@ class GuestController extends Controller
 
             $importedCount = $result['imported'];
             $errors = $result['errors'];
+            $skippedDueToLimit = $result['skipped_due_to_limit'] ?? 0;
 
             DB::commit();
 
             $message = "Successfully imported {$importedCount} guests.";
+            if ($skippedDueToLimit > 0) {
+                $message .= " {$skippedDueToLimit} rows skipped due to guest limit.";
+            }
             if (!empty($errors)) {
                 $message .= ' ' . count($errors) . ' rows had errors.';
             }
 
-            return back()->with('success', $message);
+            $flashType = $skippedDueToLimit > 0 ? 'warning' : 'success';
+            return back()->with($flashType, $message);
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Import failed: ' . $e->getMessage());
@@ -193,17 +244,35 @@ class GuestController extends Controller
         $file,
         Invitation $invitation,
         bool $skipHeader,
-        array $columnMapping
+        array $columnMapping,
+        $user = null
     ): array {
         $handle = fopen($file->getPathname(), 'r');
         $imported = 0;
         $errors = [];
+        $skippedDueToLimit = 0;
         $rowNumber = 0;
+
+        // Get current guest count and max allowed
+        $isAdmin = $user && $user->isAdmin();
+        $maxAllowed = PHP_INT_MAX;
+        $currentCount = $invitation->guests()->count();
+        
+        if (!$isAdmin && $user) {
+            $package = $user->getEffectivePackage();
+            $maxAllowed = $package ? $package->max_guests_per_invitation : 0;
+        }
 
         while (($row = fgetcsv($handle)) !== false) {
             $rowNumber++;
 
             if ($skipHeader && $rowNumber === 1) {
+                continue;
+            }
+
+            // Check if we've reached the limit
+            if (!$isAdmin && ($currentCount + $imported) >= $maxAllowed) {
+                $skippedDueToLimit++;
                 continue;
             }
 
@@ -233,7 +302,11 @@ class GuestController extends Controller
 
         fclose($handle);
 
-        return ['imported' => $imported, 'errors' => $errors];
+        return [
+            'imported' => $imported, 
+            'errors' => $errors,
+            'skipped_due_to_limit' => $skippedDueToLimit,
+        ];
     }
 
     /**

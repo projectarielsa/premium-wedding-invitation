@@ -13,6 +13,25 @@ class PackagePolicy
     use HandlesAuthorization;
 
     /**
+     * Perform pre-authorization checks.
+     * Admin users bypass all policy restrictions for management.
+     */
+    public function before(User $user, string $ability): ?bool
+    {
+        // Admins can do anything with packages
+        if ($user->isAdmin() && in_array($ability, ['create', 'update', 'view'])) {
+            return true;
+        }
+        
+        // Super admin can delete
+        if ($user->isSuperAdmin() && $ability === 'delete') {
+            return true;
+        }
+
+        return null; // Fall through to specific policy methods
+    }
+
+    /**
      * Determine whether the user can view any packages.
      */
     public function viewAny(?User $user): bool
