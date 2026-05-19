@@ -316,7 +316,7 @@ class Invitation extends Model
      */
     public function getRsvpEnabledAttribute(): bool
     {
-        return $this->settings['rsvp_enabled'] ?? true;
+        return $this->castToBool($this->settings['rsvp_enabled'] ?? true);
     }
 
     /**
@@ -324,7 +324,7 @@ class Invitation extends Model
      */
     public function getGiftEnabledAttribute(): bool
     {
-        return $this->settings['gift_enabled'] ?? true;
+        return $this->castToBool($this->settings['gift_enabled'] ?? true);
     }
 
     /**
@@ -332,7 +332,7 @@ class Invitation extends Model
      */
     public function getGuestBookEnabledAttribute(): bool
     {
-        return $this->settings['guest_book_enabled'] ?? true;
+        return $this->castToBool($this->settings['guest_book_enabled'] ?? true);
     }
 
     /**
@@ -340,7 +340,7 @@ class Invitation extends Model
      */
     public function getCountdownEnabledAttribute(): bool
     {
-        return $this->settings['countdown_enabled'] ?? true;
+        return $this->castToBool($this->settings['countdown_enabled'] ?? true);
     }
 
     /**
@@ -348,7 +348,38 @@ class Invitation extends Model
      */
     public function getMusicAutoplayAttribute(): bool
     {
-        return $this->settings['music_autoplay'] ?? false;
+        return $this->castToBool($this->settings['music_autoplay'] ?? false);
+    }
+
+    /**
+     * Safely cast a value to boolean.
+     * Handles: true, false, 1, 0, "1", "0", "true", "false", null
+     */
+    protected function castToBool(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+
+        if ($value === null) {
+            return false;
+        }
+
+        if (is_numeric($value)) {
+            return (bool) (int) $value;
+        }
+
+        if (is_string($value)) {
+            $lower = strtolower($value);
+            if ($lower === 'true' || $lower === '1') {
+                return true;
+            }
+            if ($lower === 'false' || $lower === '0' || $lower === '') {
+                return false;
+            }
+        }
+
+        return (bool) $value;
     }
 
     /**

@@ -60,27 +60,28 @@ Route::get('/pricing/compare', [PricingController::class, 'compare'])->name('pri
 Route::get('/api/packages', [PricingController::class, 'packagesJson'])->name('api.packages');
 
 // Public invitation viewing
-Route::prefix('invite')->name('invitation.public')->group(function () {
+Route::prefix('invite')->name('invitation.')->group(function () {
     // View invitation by slug
-    Route::get('/{slug}', [InvitationController::class, 'publicShow']);
+    Route::get('/{slug}', [InvitationController::class, 'publicShow'])
+        ->name('public');
     
     // View invitation with guest personalization
     Route::get('/{slug}/{guestToken}', [InvitationController::class, 'publicShowWithGuest'])
-        ->name('.guest');
+        ->name('public.guest');
     
     // RSVP form
     Route::get('/{slug}/rsvp', [RsvpController::class, 'show'])
-        ->name('.rsvp');
+        ->name('public.rsvp');
     Route::get('/{slug}/rsvp/{guestToken}', [RsvpController::class, 'show'])
-        ->name('.rsvp.guest');
+        ->name('public.rsvp.guest');
     
     // Submit RSVP (POST)
     Route::post('/{invitation:slug}/rsvp', [RsvpController::class, 'submit'])
-        ->name('.rsvp.submit');
+        ->name('public.rsvp.submit');
     
     // Get RSVP status (JSON)
     Route::get('/{invitation:slug}/rsvp/{guestToken}/status', [RsvpController::class, 'status'])
-        ->name('.rsvp.status');
+        ->name('public.rsvp.status');
 });
 
 // Public analytics tracking (called via JavaScript)
