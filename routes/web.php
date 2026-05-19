@@ -55,33 +55,29 @@ Route::post('/api/track-whatsapp-click', [MarketingController::class, 'trackWhat
 
 // Pricing Page (Public)
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
-Route::get('/pricing/{package}', [PricingController::class, 'show'])->name('pricing.show');
 Route::get('/pricing/compare', [PricingController::class, 'compare'])->name('pricing.compare');
+Route::get('/pricing/{package}', [PricingController::class, 'show'])->name('pricing.show');
 Route::get('/api/packages', [PricingController::class, 'packagesJson'])->name('api.packages');
 
 // Public invitation viewing
 Route::prefix('invite')->name('invitation.')->group(function () {
-    // View invitation by slug
-    Route::get('/{slug}', [InvitationController::class, 'publicShow'])
-        ->name('public');
-    
-    // View invitation with guest personalization
-    Route::get('/{slug}/{guestToken}', [InvitationController::class, 'publicShowWithGuest'])
-        ->name('public.guest');
-    
-    // RSVP form
+    // RSVP routes (must be before /{slug}/{guestToken} to avoid capture)
     Route::get('/{slug}/rsvp', [RsvpController::class, 'show'])
         ->name('public.rsvp');
     Route::get('/{slug}/rsvp/{guestToken}', [RsvpController::class, 'show'])
         ->name('public.rsvp.guest');
-    
-    // Submit RSVP (POST)
     Route::post('/{invitation:slug}/rsvp', [RsvpController::class, 'submit'])
         ->name('public.rsvp.submit');
-    
-    // Get RSVP status (JSON)
     Route::get('/{invitation:slug}/rsvp/{guestToken}/status', [RsvpController::class, 'status'])
         ->name('public.rsvp.status');
+    
+    // View invitation by slug
+    Route::get('/{slug}', [InvitationController::class, 'publicShow'])
+        ->name('public');
+    
+    // View invitation with guest personalization (must be last - catches /{slug}/{guestToken})
+    Route::get('/{slug}/{guestToken}', [InvitationController::class, 'publicShowWithGuest'])
+        ->name('public.guest');
 });
 
 // Public analytics tracking (called via JavaScript)
