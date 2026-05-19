@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             PackageSeeder::class,
             PaymentSettingsSeeder::class,
+            ArticleSeeder::class,
         ]);
 
         // Create test user (customer)

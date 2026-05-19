@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\AdminPackageController;
 use App\Http\Controllers\Admin\AdminPaymentSettingsController;
 use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AnalyticsController;
+use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\CheckInController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\EventController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\ExportController;
 use App\Http\Controllers\GiftAccountController;
 use App\Http\Controllers\GuestController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PricingController;
 use App\Http\Controllers\ProfileController;
@@ -31,12 +33,25 @@ use Illuminate\Support\Facades\Route;
 */
 
 // =========================================================================
-// PUBLIC ROUTES
+// PUBLIC MARKETING ROUTES
 // =========================================================================
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+// Homepage - Marketing Landing Page
+Route::get('/', [MarketingController::class, 'index'])->name('home');
+
+// Demo Page
+Route::get('/demo', [MarketingController::class, 'demo'])->name('demo');
+
+// Articles / Blog
+Route::get('/articles', [ArticleController::class, 'index'])->name('articles.index');
+Route::get('/articles/{article:slug}', [ArticleController::class, 'show'])->name('articles.show');
+
+// SEO Routes
+Route::get('/robots.txt', [MarketingController::class, 'robots']);
+Route::get('/sitemap.xml', [MarketingController::class, 'sitemap']);
+
+// WhatsApp tracking (API)
+Route::post('/api/track-whatsapp-click', [MarketingController::class, 'trackWhatsappClick']);
 
 // Pricing Page (Public)
 Route::get('/pricing', [PricingController::class, 'index'])->name('pricing');
